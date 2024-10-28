@@ -3,6 +3,6 @@ Alport Symdrome Chinese cohort project focused on well-known causal genes COL4A3
 Author: Zhen Y
 
 ### contents
-""" phenotype-genotype association analysis on 555 Chinese AS patients """
+phenotype-genotype association analysis on 555 Chinese AS patients
 
 
