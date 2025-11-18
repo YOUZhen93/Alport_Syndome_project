@@ -1,5 +1,6 @@
 # ESKD survival analysis
 # ESKD data depoists at folder test_data
+# Author: Zhen Y
 
 library(ggfortify)
 library(survminer)
