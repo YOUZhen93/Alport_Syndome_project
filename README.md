@@ -13,5 +13,5 @@ R script to visualize ONT nanopore WGS data quality, including read length distr
 python script use to extract individual signals of overlap genomic intervals from multiple bedGraph files; ussage:
 extractMatrix_bedGraph.py --path /input/dir --pattern bedGraph_file_prefix --output output_file
 #### extract_clipped_seq.py
-extract insersion sequence from regional bam file
-
+extract insersion sequence from regional TGS bam file
+Usage: python extract_clipped_seq.py insertion_bearing_regional.bam --min-length 600 --fasta -o inserted_reads.fa
