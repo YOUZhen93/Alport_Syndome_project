@@ -1,3 +1,7 @@
+# Bayesian regression model to estimate phenotypic effects of different genotypes on hearing loss;
+# in Chinese AS cohort
+# Author: Zhen Y
+
 library(rstan)
 library(brms)
 library(bayesrules)
@@ -5,7 +9,7 @@ library(ggsci)
 library(cowplot)
 library(ggdist)
 library(tidybayes)
-# hearing
+# hearing loss
 
 # generate prior
 moment_estimation <- function(params) {
@@ -27,25 +31,28 @@ moment_estimation <- function(params) {
 }
 
 
+# load hearing loss phenotype & genotype data from test_data folder
+hear_df = read.table("hearing_loss_data.xls", header = T, sep = "\t")
+#
+# convert hearing loss to integer: 0 for normal and 1 for hearing loss
+hear_df$hearing = as.integer(factor(hear_df$hearing, levels = c("Normal", "Hearing loss")))
 
-hear_df = merged_phe_geno[,c("hearing", "GT", "Gene", "Age")]
-
-hear_df = na.omit(hear_df)
-hear_df = hear_df[which(hear_df$GT != ""), ]
+# remove genotypes with too few cases
 hear_df %>% group_by(GT) %>% mutate(freq = n()) %>% filter(freq > 10) %>% as.data.frame -> hear_df
-hear_df$GT = factor(hear_df$GT)
-hear_df$Gene = factor(hear_df$Gene)
 
+
+# setting prior pars; N for total cases number and m for hearing loss number 
 N <- 274
 m <- 104
 
+# make age a linear fixed effect
+formula <- bf(hearing | trials(273) ~ Age + (1 | genotype))
 
-formula <- bf(hearing | trials(274) ~ Age + (1 | GT))
 #get_prior(formula = formula,
 #          data = hear_df,
 #          family = binomial(link = "logit"))
 
-# non-informative prior
+# non-informative prior with stan implementation
 model <- brm(
     formula,
     family = binomial(link = "logit"),
@@ -56,51 +63,23 @@ model <- brm(
 )
 
 
-
-model |> tidy_draws() |> pivot_longer(cols = starts_with("r_GT")) |> select(name, value) |> 
-mutate(name = str_remove(str_remove(name, "r_GT\\["), ",Intercept]")) |> ggplot(aes(x = value, y = name, fill=name, color=name)) + 
+# plotting
+plot1 <- model |> tidy_draws() |> pivot_longer(cols = starts_with("r_genotype")) |> select(name, value) |> 
+mutate(name = str_remove(str_remove(name, "r_genotype\\["), ",Intercept]")) |> ggplot(aes(x = value, y = name, fill=name, color=name)) + 
 stat_halfeye(point_interval = median_qi, .width = .95, color="black") + 
 labs(title = "Posterior Distributions of Mutation Effects on Hearing Phenotype",
      x = "Effect on Hearing Phenotype",
      y = "Density") + 
 theme_bw(base_size = 16, base_rect_size = 1, base_line_size = 1) + scale_fill_flatui() + scale_color_flatui() + theme(legend.position ="none") + 
-theme(plot.margin = unit(c(1,1,1,1), "cm")) + xlim(c(-1.5, 1.5))
+theme(plot.margin = unit(c(1,1,1,1), "cm"))
 
-
-get11 = posterior_samples(model)
-mutations <- colnames(get11)
-results <- lapply(mutations, function(mut) {
-  hypothesis(model, paste0(mut, " != 0"))
-})
-
-# Print p-values
-p_values <- sapply(results, function(res) {
-  res$p.value
-})
-print(p_values)
-
-plotdf = stack(get11[,5:12])
-plotdf$ind = str_remove(str_remove(plotdf$ind, "r_GT\\["), ",Intercept]")
-posterior_df = plotdf
-
+# getting posterior distributions
 draws_fit <- as_draws_array(model)
 posterior_df <- as.data.frame(draws_fit)
-ggplot(posterior_df, aes(x = values, fill = ind, color = ind)) +
-    #geom_density(size=0, alpha = 0.5) +
-    stat_halfeye(point_interval = mean_qi, .width = .95) + 
-    #facet_wrap(~parameter, scales = "free") +
-    labs(title = "Posterior Distributions of Mutation Effects on Hearing Phenotype",
-         x = "Effect on Hearing Phenotype",
-         y = "Density") + 
-    theme_cowplot(font_size = 16, line_size = 1) + scale_fill_flatui() + scale_color_flatui()
 
-
-barplot(posterior_summary(model)[,1][5:12], col = pal_flatui()(8), xaxt="n")
+# visualizing posterior bar plots
+plot2 <- barplot(posterior_summary(model)[,1][5:12], col = pal_flatui()(8), xaxt="n")
 axis(side = 1, at = 1:8, labels = rownames(posterior_summary(model))[5:12], las=2)
-
-
-
-saveRDS(model, file = "hearing_bayesian_regression_model.rds")
 
 
 
