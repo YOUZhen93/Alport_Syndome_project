@@ -3,12 +3,15 @@ Alport Symdrome Chinese cohort project focused on well-known causal genes COL4A3
 Author: Zhen Y
 
 ### contents
-# test_data: 
+#### test_data: 
 folder contains genotype-phenotype data for AS patients with hearing loss, cysts, and ESKD;
-# pheno-geno: 
+#### pheno-geno: 
 folder contains scripts to perform genotype-phenotype association analysis between genotypes and hearing loss, cysts, and ESKD. Use data from test_data as input.
-# TGS_Figure_QC_R_plot.R
+#### TGS_Figure_QC_R_plot.R
 R script to visualize ONT nanopore WGS data quality, including read length distribution and reads quality distribution
-# extractMatrix_bedGraph.py
-
+#### extractMatrix_bedGraph.py
+python script use to extract individual signals of overlap genomic intervals from multiple bedGraph files; ussage:
+extractMatrix_bedGraph.py --path /input/dir --pattern bedGraph_file_prefix --output output_file
+#### extract_clipped_seq.py
+extract insersion sequence from regional bam file
 
